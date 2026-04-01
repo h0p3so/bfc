@@ -9,5 +9,4 @@
 
 #define PROGRAM_NAME "bfc"
 
-
 #endif
