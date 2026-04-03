@@ -8,7 +8,6 @@ struct Args
 {
 	char     *in_filename;
 	char     *out_filename;
-	uint16_t arch;
 	bool     should_optimize;
 	bool     generate_source;
 };
@@ -31,7 +30,7 @@ static struct Args parse_cli_arguments (const uint32_t argc, char **argv)
 	opterr = false;
 
 	int32_t opt;
-	while ((opt = getopt(argc, argv, "f:o:OA:hS")) != -1)
+	while ((opt = getopt(argc, argv, "f:o:OhS")) != -1)
 	{
 		switch (opt)
 		{
@@ -39,15 +38,10 @@ static struct Args parse_cli_arguments (const uint32_t argc, char **argv)
 			case 'o': { args.out_filename = optarg; break; }
 			case 'O': { args.should_optimize = true; break; }
 			case 'S': { args.generate_source = true; break; }
-			case 'A': { args.arch = (uint16_t) atoi(optarg); break; }
 			case 'h': default : display_usage();
 		}
 	}
 
-	if ((args.arch != ARCH_64) && (args.arch != ARCH_32))
-	{
-		args.arch = ARCH_64;
-	}
 	if (args.in_filename == 0)
 	{
 		display_usage();
@@ -64,7 +58,6 @@ static void display_usage ()
 	printf(" -o [filename] specify output's filename\n");
 	printf(" -O            optimize code (do not keep original source)\n");
 	printf(" -S            generate assembly file instead of elf file\n");
-	printf(" -A [32 | 64]  specify 32 or 64 bit arch for output\n");
 
 	exit(EXIT_SUCCESS);
 }
