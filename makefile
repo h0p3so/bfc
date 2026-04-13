@@ -1,5 +1,5 @@
 CC = gcc
-OBJS = bfc.o lexer.o
+OBJS = bfc.o lexer.o err.o
 STD_FLAGS = -Wall -Wextra -Wpedantic
 EXEC = bfc
 
@@ -10,8 +10,10 @@ all: $(EXEC)
 $(EXEC): $(OBJS)
 	$(CC) $(OBJS) -o $(EXEC)
 lexer.o: lexer.c
-	$(CC) lexer.c -c lexer.o $(STD_FLAGS) -Wno-unused-function
+	$(CC) lexer.c -c $(STD_FLAGS) -Wno-unused-function
 bfc.o: bfc.c
-	$(CC) bfc.c -c bfc.o $(STD_FLAGS)
+	$(CC) bfc.c -c $(STD_FLAGS)
+err.o: err.c
+	$(CC) err.c -c $(STD_FLAGS)
 clean:
 	rm -rf $(OBJS) $(EXEC)
