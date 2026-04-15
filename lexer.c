@@ -23,7 +23,7 @@ struct Lexd
 	uint16_t offset;
 };
 
-static inline struct Token save_token (struct Lexd *lexd, const uint32_t off)
+static inline struct Token gen_token (struct Lexd *lexd, const uint32_t off)
 {
 	struct Token token =
 	{
@@ -35,7 +35,7 @@ static inline struct Token save_token (struct Lexd *lexd, const uint32_t off)
 }
 
 static uint32_t read_file (char**, const char*);
-static void look_for_unclosed (); // TODO
+static void look_for_unclosed (const uint32_t*, const struct Token*);
 
 struct Token* lex_file (const char *filename)
 {
@@ -70,14 +70,13 @@ struct Token* lex_file (const char *filename)
 			case LEXER_TOKEN_NXT:
 			case LEXER_TOKEN_PRV:
 			{
-				stdv_put(tokens, save_token(&lexd, i));
+				stdv_put(tokens, gen_token(&lexd, i));
 				lastype = *(stdv_back(tokens).context);
 				break;
 			}
-
 			case LEXER_TOKEN_LEF:
 			{
-				stdv_put(tokens, save_token(&lexd, i));
+				stdv_put(tokens, gen_token(&lexd, i));
 				stdv_back(tokens).aux.jmp = LEXER_UNPAIRED;
 				stdv_put(indexstack, stdv_size(tokens) - 1);
 
@@ -88,15 +87,16 @@ struct Token* lex_file (const char *filename)
 			{
 				if (stdv_size(indexstack) == 0)
 				{
-					err_print(
-						ERROR_UNOPENED_BRACE,
-						lexd.source + i,
-						lexd.numline,
-						lexd.offset
-					);
+					err_print(ERROR_UNOPENED_BRACE, lexd.source + i, lexd.numline, lexd.offset, true);
 				}
-				stdv_put(tokens, save_token(&lexd, i));
 
+				struct Token token = gen_token(&lexd, i);
+				uint32_t jmp = stdv_pop(indexstack);
+
+				token.aux.jmp = jmp;
+
+				stdv_put(tokens, token);
+				stdv_get(tokens, jmp).aux.jmp = stdv_size(tokens) - 1;
 				lastype = '\0';
 				break;
 			}
@@ -107,6 +107,7 @@ struct Token* lex_file (const char *filename)
 		lexd.offset++;
 	}
 
+	look_for_unclosed(indexstack, tokens);
 	stdv_free(indexstack);
 	return tokens;
 }
@@ -139,4 +140,19 @@ static uint32_t read_file (char **source, const char *filename)
 	}
 
 	return size;
+}
+
+static void look_for_unclosed (const uint32_t *stack, const struct Token *tokens)
+{
+	const uint32_t on_error = stdv_size(stack);
+	if (on_error == 0)
+	{
+		return;
+	}
+
+	for (uint32_t i = 0; i < on_error; i++)
+	{
+		struct Token t = stdv_get(tokens, stdv_get(stack, i));
+		err_print(ERROR_UNCLOSED_BRACE, t.context, t.numline, t.offset, ((i + 1) == on_error));
+	}
 }
