@@ -6,7 +6,7 @@
 struct Token
 {
 	char *context;
-	uint64_t aux;
+	uint16_t aux;
 	uint16_t numline;
 	uint16_t offset;
 };

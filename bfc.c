@@ -4,6 +4,8 @@
 
 #include "lexer.h"
 #include "stdv.h"
+#include "ir.h"
+#include "gen.h"
 
 struct Args
 {
@@ -31,7 +33,15 @@ int main (int argc, char **argv)
 		return 0;
 	}
 
+	struct IRToken *ir = ir_gen(tokens, args.should_optimize);
 	stdv_free(tokens);
+
+	if (args.generate_source)
+	{
+		gen_gen(ir, args.out_filename);
+	}
+
+	stdv_free(ir);
 	return 0;
 }
 
@@ -82,6 +92,6 @@ static void debug (const struct Token *tokens, const char *filename)
 	for (uint32_t i = 0; i < (uint32_t) stdv_size(tokens); i++)
 	{
 		const struct Token token = stdv_get(tokens, i);
-		printf("%5d:%-5d: %c <%5ld>\n", token.numline, token.offset, *token.context, token.aux);
+		printf("T%5d: %5d:%-5d: %c <%5d>\n", i, token.numline, token.offset, *token.context, token.aux);
 	}
 }
