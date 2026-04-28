@@ -1,16 +1,8 @@
 #ifndef BFC_LEXER_H
 #define BFC_LEXER_H
 
-#include "globl.h"
+#include "common/lex-token.h"
 
-struct Token
-{
-	char *context;
-	uint16_t aux;
-	uint16_t numline;
-	uint16_t offset;
-};
-
-struct Token* lex_file (const char*);
+struct LexToken* lex_file (const char*);
 
 #endif

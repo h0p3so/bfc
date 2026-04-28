@@ -1,5 +1,7 @@
+#include "common/program-name.h"
+#include "libs/stdv.h"
+
 #include "lexer.h"
-#include "stdv.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,9 +30,9 @@ struct Lexd
 	uint16_t offset;
 };
 
-static inline struct Token gen_token (struct Lexd *lexd, const uint32_t off)
+static inline struct LexToken gen_token (struct Lexd *lexd, const uint32_t off)
 {
-	struct Token token =
+	struct LexToken token =
 	{
 		.context = lexd->source + off,
 		.numline = lexd->numline,
@@ -41,11 +43,11 @@ static inline struct Token gen_token (struct Lexd *lexd, const uint32_t off)
 }
 
 static uint32_t read_file (char**, const char*);
-static void look_for_unclosed (const uint32_t*, const struct Token*);
+static void look_for_unclosed (const uint32_t*, const struct LexToken*);
 
 static void print_error (const enum Error, const char*, const uint16_t, const uint16_t, const bool);
 
-struct Token* lex_file (const char *filename)
+struct LexToken* lex_file (const char *filename)
 {
 	struct Lexd lexd = {
 		.numline = 1,
@@ -53,7 +55,7 @@ struct Token* lex_file (const char *filename)
 	};
 	lexd.length = read_file(&lexd.source, filename);
 
-	struct Token *tokens = stdv_create(sizeof(struct Token), STDV_STD_INIT_CAP);
+	struct LexToken *tokens = stdv_create(sizeof(struct LexToken), STDV_STD_INIT_CAP);
 	uint32_t *indexstack = stdv_create(sizeof(uint32_t)    , STDV_STD_INIT_CAP);
 
 	char lastype = '\0';
@@ -97,7 +99,7 @@ struct Token* lex_file (const char *filename)
 					print_error(ERROR_UNOPENED_BRACE, lexd.source + i, lexd.numline, lexd.offset, true);
 				}
 
-				struct Token token = gen_token(&lexd, i);
+				struct LexToken token = gen_token(&lexd, i);
 				uint32_t jmp = stdv_pop(indexstack);
 				token.aux = jmp;
 
@@ -148,7 +150,7 @@ static uint32_t read_file (char **source, const char *filename)
 	return size;
 }
 
-static void look_for_unclosed (const uint32_t *stack, const struct Token *tokens)
+static void look_for_unclosed (const uint32_t *stack, const struct LexToken *tokens)
 {
 	const uint32_t on_error = stdv_size(stack);
 	if (on_error == 0)
@@ -158,7 +160,7 @@ static void look_for_unclosed (const uint32_t *stack, const struct Token *tokens
 
 	for (uint32_t i = 0; i < on_error; i++)
 	{
-		struct Token t = stdv_get(tokens, stdv_get(stack, i));
+		struct LexToken t = stdv_get(tokens, stdv_get(stack, i));
 		print_error(ERROR_UNCLOSED_BRACE, t.context, t.numline, t.offset, ((i + 1) == on_error));
 	}
 }

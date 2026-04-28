@@ -1,11 +1,12 @@
+#include "common/program-name.h"
+#include "libs/stdv.h"
+
+#include "lexer.h"
+#include "ir.h"
+
 #include <stdio.h>
 #include <getopt.h>
 #include <stdlib.h>
-
-#include "lexer.h"
-#include "stdv.h"
-#include "ir.h"
-#include "gen.h"
 
 struct Args
 {
@@ -17,15 +18,15 @@ struct Args
 };
 
 static struct Args parse_cli_arguments (const uint32_t, char**);
-static void display_usage ();
+static void display_usage (void);
 
-static void debug (const struct Token*, const char*);
+static void debug (const struct LexToken*, const char*);
 
 int main (int argc, char **argv)
 {
 	struct Args args = parse_cli_arguments(argc, argv);
 
-	struct Token *tokens = lex_file(args.in_filename);
+	struct LexToken *tokens = lex_file(args.in_filename);
 	if (args.debug)
 	{
 		debug(tokens, args.in_filename);
@@ -38,7 +39,6 @@ int main (int argc, char **argv)
 
 	if (args.generate_source)
 	{
-		gen_gen(ir, args.out_filename);
 	}
 
 	stdv_free(ir);
@@ -73,7 +73,7 @@ static struct Args parse_cli_arguments (const uint32_t argc, char **argv)
 	return args;
 }
 
-static void display_usage ()
+static void display_usage (void)
 {
 	printf("%s usage:\n", PROGRAM_NAME);
 	printf(" $ %s -f [filename.b] [opts]\n\n", PROGRAM_NAME);
@@ -86,12 +86,12 @@ static void display_usage ()
 	exit(EXIT_SUCCESS);
 }
 
-static void debug (const struct Token *tokens, const char *filename)
+static void debug (const struct LexToken *tokens, const char *filename)
 {
 	printf("bfc:debug-version:%s file:\n", filename);
 	for (uint32_t i = 0; i < (uint32_t) stdv_size(tokens); i++)
 	{
-		const struct Token token = stdv_get(tokens, i);
+		const struct LexToken token = stdv_get(tokens, i);
 		printf("T%5d: %5d:%-5d: %c <%5d>\n", i, token.numline, token.offset, *token.context, token.aux);
 	}
 }

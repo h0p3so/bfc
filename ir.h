@@ -24,30 +24,10 @@
 #ifndef BFC_IR_H
 #define BFC_IR_H
 
-#include "lexer.h"
+#include "common/lex-token.h"
+#include "common/ir-types.h"
+#include <stdbool.h>
 
-enum IRAction {
-	INS_NOP = 0,
-
-	INS_INC = '+',
-	INS_DEC = '-',
-	INS_NXT = '>',
-	INS_PRE = '<',
-	INS_OUT = '.',
-	INT_INP = ',',
-	INS_BEG = '[',
-	INS_END = ']',
-
-	INS_ZER,
-	INS_SET,
-};
-
-struct IRToken {
-	enum IRAction action;
-	uint16_t lex_aux;
-	uint16_t optmzd;
-};
-
-struct IRToken* ir_gen (const struct Token*, const bool);
+struct IRToken* ir_gen (const struct LexToken*, const bool);
 
 #endif
