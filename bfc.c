@@ -3,6 +3,7 @@
 
 #include "lexer.h"
 #include "ir.h"
+#include "gen.h"
 
 #include <stdio.h>
 #include <getopt.h>
@@ -10,11 +11,12 @@
 
 struct Args
 {
-	char *in_filename;
-	char *out_filename;
-	bool should_optimize;
-	bool generate_source;
-	bool debug;
+	char *inFilename;
+	char *outFilename;
+	uint16_t memSize;
+	bool shouldOptmz;
+	bool shouldGenAsm;
+	bool shouldDebug;
 };
 
 static struct Args parse_cli_arguments (const uint32_t, char**);
@@ -26,19 +28,20 @@ int main (int argc, char **argv)
 {
 	struct Args args = parse_cli_arguments(argc, argv);
 
-	struct LexToken *tokens = lex_file(args.in_filename);
-	if (args.debug)
+	struct LexToken *tokens = lex_file(args.inFilename);
+	if (args.shouldDebug)
 	{
-		debug(tokens, args.in_filename);
+		debug(tokens, args.inFilename);
 		stdv_free(tokens);
 		return 0;
 	}
 
-	struct IRToken *ir = ir_gen(tokens, args.should_optimize);
+	struct IRToken *ir = ir_gen(tokens, args.shouldOptmz);
 	stdv_free(tokens);
 
-	if (args.generate_source)
+	if (args.shouldGenAsm)
 	{
+		gen_gen(ir, args.outFilename, args.memSize);
 	}
 
 	stdv_free(ir);
@@ -52,22 +55,27 @@ static struct Args parse_cli_arguments (const uint32_t argc, char **argv)
 	opterr = false;
 
 	int32_t opt;
-	while ((opt = getopt(argc, argv, "f:o:OhSD")) != -1)
+	while ((opt = getopt(argc, argv, "f:o:OhSDm:")) != -1)
 	{
 		switch (opt)
 		{
-			case 'f': { args.in_filename = optarg;  break; }
-			case 'o': { args.out_filename = optarg; break; }
-			case 'O': { args.should_optimize = true; break; }
-			case 'S': { args.generate_source = true; break; }
-			case 'D': { args.debug = true; break; }
+			case 'f': { args.inFilename = optarg;  break; }
+			case 'o': { args.outFilename = optarg; break; }
+			case 'O': { args.shouldOptmz = true; break; }
+			case 'S': { args.shouldGenAsm = true; break; }
+			case 'D': { args.shouldDebug = true; break; }
+			case 'm': { args.memSize = (uint32_t) atoi(optarg); break; }
 			case 'h': default : display_usage();
 		}
 	}
 
-	if (args.in_filename == 0)
+	if (args.inFilename == 0)
 	{
 		display_usage();
+	}
+	if (args.memSize == 0)
+	{
+		args.memSize = 30'000;
 	}
 
 	return args;
@@ -82,13 +90,14 @@ static void display_usage (void)
 	printf(" -O            optimize code (do not keep original source)\n");
 	printf(" -S            generate assembly file instead of elf file\n");
 	printf(" -D            print debug version\n");
+	printf(" -m [usize]    specify memory size (30k default)\n");
 
 	exit(EXIT_SUCCESS);
 }
 
 static void debug (const struct LexToken *tokens, const char *filename)
 {
-	printf("bfc:debug-version:%s file:\n", filename);
+	printf("%s:debug-version:%s file:\n", PROGRAM_NAME, filename);
 	for (uint32_t i = 0; i < (uint32_t) stdv_size(tokens); i++)
 	{
 		const struct LexToken token = stdv_get(tokens, i);
