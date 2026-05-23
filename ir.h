@@ -29,5 +29,6 @@
 #include <stdbool.h>
 
 struct IRToken* ir_gen (const struct LexToken*, const bool);
+const char *ir_action_as_str (const enum IRAction);
 
 #endif

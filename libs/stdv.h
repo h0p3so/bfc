@@ -27,7 +27,7 @@
 #define stdv_pend_or(v, or)         (((v) && stdv_size(v) > 0) ? stdv_pend(v) : (or))
 
 #define stdv_pget(v, p)             (&(v)[p])
-#define stdv_pget_or(v, p, or)      (((v) && (p) < stdv_size(v)) ? stdv_pget(v, p) : (or))
+#define stdv_pget_or(v, p, or)      (((v) && (p) < stdv_size(v)) ? stdv_pget(v, p) : &(or))
 
 #define stdv_empty(v)               ((v) ? (stdv_size(v) == 0) : 1)
 #define stdv_size(v)                (_STDV_GET_HEADER(v)->len)
