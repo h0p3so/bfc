@@ -17,12 +17,12 @@ enum IRAction {
 	INS_RIG = BF_TYPE_RIG,
 
 	INS_ZER,
-	INS_SET,
+	INS_MOV,
 };
 
 struct IRToken {
 	enum IRAction action;
-	uint16_t aux;
+	int16_t aux;
 };
 
 #endif

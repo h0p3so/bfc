@@ -33,7 +33,7 @@ const char *ir_action_as_str (const enum IRAction action)
 		case INS_LEF: return "LEF";
 		case INS_RIG: return "RIG";
 		case INS_ZER: return "ZER";
-		case INS_SET: return "SET";
+		case INS_MOV: return "MOV";
 	}
 
 	return NULL;
@@ -67,7 +67,7 @@ static struct IRToken* optimize (struct IRToken *ir)
 
 		if ((c->action == INS_ADD && n->action == INS_SUB) || (c->action == INS_SUB && n->action == INS_ADD))
 		{
-			const int16_t aux = c->aux - n->aux;
+			const int16_t aux = (uint16_t) c->aux - (uint16_t) n->aux;
 			if (aux == 0)
 			{
 				c->action = INS_ZER;
@@ -76,9 +76,8 @@ static struct IRToken* optimize (struct IRToken *ir)
 				continue;
 			}
 
-			const bool isPositive = (aux > 0);
-			c->action = (isPositive) ? INS_ADD : INS_SUB;
-			c->aux = (uint16_t) ((isPositive) ? aux : aux * -1);
+			c->action = INS_MOV;
+			c->aux = aux;
 
 			n->action = INS_NOP;
 			i += 2;
