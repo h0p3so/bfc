@@ -87,7 +87,7 @@ static inline void _gen_lef (FILE *file, const int16_t auxL, const int16_t auxR)
 	static const char *const fmt =
 		".L%d:\n"             \
 		"\tcmpb\t$0, (%r8)\n" \
-		"\tje\t.R%d\n";
+		"\tjbe\t.R%d\n";
 	fprintf(file, fmt, auxL, auxR);
 }
 
@@ -96,7 +96,7 @@ static inline void _gen_rig (FILE *file, const int16_t auxL, const int16_t auxR)
 	static const char *const fmt =
 		".R%d:\n"             \
 		"\tcmpb\t$0, (%r8)\n" \
-		"\tjne\t.L%d\n";
+		"\tja\t.L%d\n";
 	fprintf(file, fmt, auxL, auxR);
 }
 
@@ -130,7 +130,7 @@ void gen_gen (const struct IRToken *ir, const char *outFilename, const uint16_t 
 			case INS_NXT: { _gen_nxt(file, t.aux); break; }
 			case INS_PRV: { _gen_prv(file, t.aux); break; }
 			case INS_OUT: { _gen_out(file, t.aux); break; }
-			case INT_INP: { _gen_inp(file, t.aux); break; }
+			case INS_INP: { _gen_inp(file, t.aux); break; }
 
 			case INS_LEF: { _gen_lef(file, t.aux, stdv_get(ir, t.aux).aux); break; }
 			case INS_RIG: { _gen_rig(file, t.aux, stdv_get(ir, t.aux).aux); break; }

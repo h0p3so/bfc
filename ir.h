@@ -26,6 +26,7 @@
 
 #include "common/lex-token.h"
 #include "common/ir-types.h"
+
 #include <stdbool.h>
 
 struct IRToken* ir_gen (const struct LexToken*, const bool);
