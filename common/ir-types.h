@@ -18,6 +18,10 @@ enum IRAction {
 
 	INS_ZER,
 	INS_MOV,
+	INS_MUL,
+
+	INS_MUL_ADD,
+	INS_MUL_SUB
 };
 
 struct IRToken {

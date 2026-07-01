@@ -106,6 +106,29 @@ static inline void _gen_mov (FILE *file, const int16_t aux)
 	fprintf(file, fmt, aux);
 }
 
+static inline void _gen_mul (FILE *file)
+{
+	static const char *const fmt = "\tmovb\t(%r8), %r9b\n";
+	fprintf(file, "%s", fmt);
+}
+
+static inline void _gen_mul_add (FILE *file, const int16_t aux)
+{
+	static const char *const fmt =
+		"\tmovb\t$%d, %%al\n" \
+		"\timulb\t%r9b\n"    \
+		"\taddb\t%%al, (%r8)\n";
+	fprintf(file, fmt, aux);
+}
+
+static inline void _gen_mul_sub (FILE *file, const int16_t aux)
+{
+	static const char *const fmt =
+		"\tmovb\t$%d, %%al\n" \
+		"\timulb\t%r9b\n"    \
+		"\tsubb\t%%al, (%r8)\n";
+	fprintf(file, fmt, aux);
+}
 
 void gen_gen (const struct IRToken *ir, const char *outFilename, const uint16_t memsz)
 {
@@ -137,6 +160,11 @@ void gen_gen (const struct IRToken *ir, const char *outFilename, const uint16_t 
 
 			case INS_ZER: { _gen_mov(file, 0); break; }
 			case INS_MOV: { _gen_mov(file, t.aux); break; }
+
+			case INS_MUL: { _gen_mul(file); break; }
+			case INS_MUL_ADD: { _gen_mul_add(file, t.aux); break; }
+			case INS_MUL_SUB: { _gen_mul_sub(file, t.aux); break; }
+
 			default:
 			{
 				fprintf(stderr, "%s:gen: unreachable\n", PROGRAM_NAME);

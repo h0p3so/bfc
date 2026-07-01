@@ -1,17 +1,19 @@
 #include "libs/stdv.h"
 
 #include "ir.h"
+#include "common/program-name.h"
 
 #define IR_NO_FIXED_OPTMZ 3
 
 #include <stdio.h> // XXX
 
-#define IR_IGNORE 0
+#define IR_NO_AUX 0
 
 static struct IRToken* simple_pass (struct IRToken*, const struct LexToken*);
 static struct IRToken* optimize (struct IRToken*);
 
 static void pattern_recognition (struct IRToken*, const uint32_t, const uint32_t);
+static void apply_further_optimization (struct IRToken*, const uint32_t, const uint32_t);
 
 struct IRToken* ir_gen (const struct LexToken *tokens, const bool shouldOptimize)
 {
@@ -40,6 +42,9 @@ const char *ir_action_as_str (const enum IRAction action)
 		case INS_RIG: return "RIG";
 		case INS_ZER: return "ZER";
 		case INS_MOV: return "MOV";
+		case INS_MUL: return "MUL";
+		case INS_MUL_ADD: return "MUL_ADD";
+		case INS_MUL_SUB: return "MUL_SUB";
 	}
 
 	return NULL;
@@ -137,23 +142,24 @@ static void pattern_recognition (struct IRToken *ir, const uint32_t from, const 
 {
 	const struct Pattern fixedOptimizations [IR_NO_FIXED_OPTMZ] = {
 		{
-			.expected    = (struct PatternMemb []) {{INS_LEF, 1}, {INS_RIG, 1}},
-			.replacement = (struct PatternMemb []) {{INS_NOP, IR_IGNORE}, {INS_NOP, IR_IGNORE}},
+			.expected    = (struct PatternMemb []) {{INS_LEF, IR_NO_AUX}, {INS_RIG, IR_NO_AUX}},
+			.replacement = (struct PatternMemb []) {{INS_NOP, IR_NO_AUX}, {INS_NOP, IR_NO_AUX}},
 			.length      = 2,
 		},
 		{
-			.expected    = (struct PatternMemb []) {{INS_LEF, 1}, {INS_SUB, 1}, {INS_RIG, 1}},
-			.replacement = (struct PatternMemb []) {{INS_ZER, IR_IGNORE}, {INS_NOP, 1}, {INS_NOP, IR_IGNORE}},
+			.expected    = (struct PatternMemb []) {{INS_LEF, IR_NO_AUX}, {INS_SUB, 1}, {INS_RIG, IR_NO_AUX}},
+			.replacement = (struct PatternMemb []) {{INS_ZER, IR_NO_AUX}, {INS_NOP, 1}, {INS_NOP, IR_NO_AUX}},
 			.length      = 3
 		},
 		{
-			.expected    = (struct PatternMemb []) {{INS_LEF, 1}, {INS_ADD, 1}, {INS_RIG, 1}},
-			.replacement = (struct PatternMemb []) {{INS_ZER, IR_IGNORE}, {INS_NOP, 1}, {INS_NOP, IR_IGNORE}},
+			.expected    = (struct PatternMemb []) {{INS_LEF, IR_NO_AUX}, {INS_ADD, 1}, {INS_RIG, IR_NO_AUX}},
+			.replacement = (struct PatternMemb []) {{INS_ZER, IR_NO_AUX}, {INS_NOP, 1}, {INS_NOP, IR_NO_AUX}},
 			.length      = 3
 		}
 	};
 
 	const uint32_t length = to - from + 1;
+	bool optimized = false;
 
 	for (uint32_t i = 0; i < IR_NO_FIXED_OPTMZ; i++)
 	{
@@ -172,15 +178,75 @@ static void pattern_recognition (struct IRToken *ir, const uint32_t from, const 
 			const enum IRAction actionIs = stdv_get(ir, from + j).action;
 			const int16_t auxIs = stdv_get(ir, from + j).aux;
 
-			if ((auxShouldBe == IR_IGNORE && auxIs != auxShouldBe) || (actionIs != actionShouldBe))
-			{
-				replace = false;
-			}
+			const bool isLoop = (actionShouldBe == INS_LEF || actionShouldBe == INS_RIG);
+			if (isLoop && actionShouldBe == actionIs)
+			{ continue; }
+
+			if (actionShouldBe == actionIs && auxShouldBe == auxIs)
+			{ continue; }
+
+			replace = false;
 		}
 
 		for (uint32_t j = 0; j < p.length && replace; j++)
 		{
 			stdv_pget(ir, from + j)->action = p.replacement[j].action;
+			optimized = true;
+		}
+	}
+
+	if (optimized == false)
+	{
+		apply_further_optimization(ir, from, to);
+	}
+}
+
+static void apply_further_optimization (struct IRToken *ir, const uint32_t from, const uint32_t to)
+{
+	int32_t startingCell = 0;
+	bool cursorHasMoved = false;
+
+	for (uint32_t i = from; i < to; i++)
+	{
+		const struct IRToken token = stdv_get(ir, i);
+		if (token.action == INS_NXT) { startingCell += token.aux; cursorHasMoved = true; }
+		if (token.action == INS_PRV) { startingCell -= token.aux; cursorHasMoved = true; }
+	}
+
+	/* Optimizations where the cursor does not move are implemented in
+	 * `pattern_recognition` function
+	 */
+	if (cursorHasMoved == false || startingCell != 0)
+	{ return; }
+
+	for (uint32_t i = from; i < to + 1; i++)
+	{
+		struct IRToken *token = stdv_pget(ir, i);
+		switch (token->action)
+		{
+			case INS_PRV:
+			case INS_NXT: { continue; }
+
+			case INS_ADD: { token->action = INS_MUL_ADD; break; }
+			case INS_SUB: { token->action = INS_MUL_SUB; break; }
+
+			case INS_LEF: { token->action = INS_MUL; break; }
+			case INS_RIG: { token->action = INS_NOP; break; }
+
+			default:
+			{
+				fprintf(stderr, "%s:ir: unreachable\n", PROGRAM_NAME);
+				fprintf(stderr, "please create an issue at https://github.com/h0p3so/bfc with the full context of the program\n");
+				exit(EXIT_FAILURE);
+			}
 		}
 	}
 }
+
+/*[<->-<<<<<<+>>>>>>] = MUL PRV
+
+MUL: take the value of the current pointer and store it in r8
+LEF
+MUL_SUB: mul the current cell by r8 and subtract to current ptr
+RIG
+*/
