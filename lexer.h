@@ -3,6 +3,14 @@
 
 #include "globl.h"
 
-void lex_file (const char*);
+struct Token
+{
+	char *context;
+	union { int32_t jmp; uint16_t times; } aux;
+	uint16_t numline;
+	uint16_t offset;
+};
+
+struct Token* lex_file (const char*);
 
 #endif
