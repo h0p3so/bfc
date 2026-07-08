@@ -2,7 +2,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 
-#include "globl.h"
+#include "lexer.h"
 
 struct Args
 {
@@ -19,6 +19,8 @@ static void display_usage ();
 int main (int argc, char **argv)
 {
 	struct Args args = parse_cli_arguments(argc, argv);
+
+	lex_file(args.in_filename);
 	return 0;
 }
 

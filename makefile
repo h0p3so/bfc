@@ -1,5 +1,5 @@
 CC = gcc
-OBJS = bfc.o
+OBJS = bfc.o lexer.o
 FLAGS = -Wall -Wextra -Wpedantic
 EXEC = bfc
 
