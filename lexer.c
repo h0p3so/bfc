@@ -30,6 +30,7 @@ static inline struct Token gen_token (struct Lexd *lexd, const uint32_t off)
 		.context = lexd->source + off,
 		.numline = lexd->numline,
 		.offset = lexd->offset,
+		.aux = 1
 	};
 	return token;
 }
@@ -52,11 +53,10 @@ struct Token* lex_file (const char *filename)
 
 	for (uint32_t i = 0; i < lexd.length; i++)
 	{
-		//dfr
 		const char type = lexd.source[i];
 		if (type == lastype)
 		{
-			stdv_back(tokens).aux.times++;
+			stdv_back(tokens).aux++;
 			lexd.offset++;
 			continue;
 		}
@@ -77,7 +77,7 @@ struct Token* lex_file (const char *filename)
 			case LEXER_TOKEN_LEF:
 			{
 				stdv_put(tokens, gen_token(&lexd, i));
-				stdv_back(tokens).aux.jmp = LEXER_UNPAIRED;
+				stdv_back(tokens).aux = LEXER_UNPAIRED;
 				stdv_put(indexstack, stdv_size(tokens) - 1);
 
 				lastype = '\0';
@@ -92,11 +92,10 @@ struct Token* lex_file (const char *filename)
 
 				struct Token token = gen_token(&lexd, i);
 				uint32_t jmp = stdv_pop(indexstack);
-
-				token.aux.jmp = jmp;
+				token.aux = jmp;
 
 				stdv_put(tokens, token);
-				stdv_get(tokens, jmp).aux.jmp = stdv_size(tokens) - 1;
+				stdv_get(tokens, jmp).aux = stdv_size(tokens) - 1;
 				lastype = '\0';
 				break;
 			}

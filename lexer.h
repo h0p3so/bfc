@@ -6,7 +6,7 @@
 struct Token
 {
 	char *context;
-	union { int32_t jmp; uint16_t times; } aux;
+	uint64_t aux;
 	uint16_t numline;
 	uint16_t offset;
 };

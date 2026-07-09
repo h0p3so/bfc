@@ -12,7 +12,7 @@ $(EXEC): $(OBJS)
 lexer.o: lexer.c
 	$(CC) lexer.c -c $(STD_FLAGS) -Wno-unused-function
 bfc.o: bfc.c
-	$(CC) bfc.c -c $(STD_FLAGS)
+	$(CC) bfc.c -c $(STD_FLAGS) -Wno-unused-function
 err.o: err.c
 	$(CC) err.c -c $(STD_FLAGS)
 clean:
