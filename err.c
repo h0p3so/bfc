@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void err_print (const enum Error error, const char *context, const uint16_t numline, const uint16_t offset)
+void err_print (const enum Error error, const char *context, const uint16_t numline, const uint16_t offset, const bool _exit)
 {
 	static const char *const errors[] =
 	{
@@ -11,7 +11,7 @@ void err_print (const enum Error error, const char *context, const uint16_t numl
 		"(unclosed brace)",
 	};
 
-	fprintf(stderr, "\x1b[2J\x1b[Hbfc:error: cannot continue due to %s condition\n", errors[error]);
+	fprintf(stderr, "bfc:error: cannot continue due to %s condition\n", errors[error]);
 	fprintf(stderr, "%5d:%-5d: ", numline, offset);
 
 	const char type = *context;
@@ -20,6 +20,9 @@ void err_print (const enum Error error, const char *context, const uint16_t numl
 	for (; context[n] == type; n++)
 		;;
 
-	fprintf(stderr, "\x1b[5m%.*s\x1b[25m\n", n, context);
-	exit(EXIT_FAILURE);
+	fprintf(stderr, "\x1b[5m%.*s\x1b[25m\n\n", n, context);
+	if (_exit)
+	{
+		exit(EXIT_FAILURE);
+	}
 }
