@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "stdv.h"
+#include "err.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +15,6 @@
 #define LEXER_TOKEN_NXT '>'
 #define LEXER_TOKEN_PRV '<'
 
-
 struct Lexd
 {
 	char   *source;
@@ -23,11 +23,11 @@ struct Lexd
 	uint16_t offset;
 };
 
-static inline struct Token save_token (struct Lexd *lexd)
+static inline struct Token save_token (struct Lexd *lexd, const uint32_t off)
 {
 	struct Token token =
 	{
-		.context = lexd->source + lexd->length,
+		.context = lexd->source + off,
 		.numline = lexd->numline,
 		.offset = lexd->offset,
 	};
@@ -35,7 +35,7 @@ static inline struct Token save_token (struct Lexd *lexd)
 }
 
 static uint32_t read_file (char**, const char*);
-static void look_for_unpaired (); // TODO
+static void look_for_unclosed (); // TODO
 
 struct Token* lex_file (const char *filename)
 {
@@ -52,6 +52,7 @@ struct Token* lex_file (const char *filename)
 
 	for (uint32_t i = 0; i < lexd.length; i++)
 	{
+		//dfr
 		const char type = lexd.source[i];
 		if (type == lastype)
 		{
@@ -69,14 +70,14 @@ struct Token* lex_file (const char *filename)
 			case LEXER_TOKEN_NXT:
 			case LEXER_TOKEN_PRV:
 			{
-				stdv_put(tokens, save_token(&lexd));
+				stdv_put(tokens, save_token(&lexd, i));
 				lastype = *(stdv_back(tokens).context);
 				break;
 			}
 
 			case LEXER_TOKEN_LEF:
 			{
-				stdv_put(tokens, save_token(&lexd));
+				stdv_put(tokens, save_token(&lexd, i));
 				stdv_back(tokens).aux.jmp = LEXER_UNPAIRED;
 				stdv_put(indexstack, stdv_size(tokens) - 1);
 
@@ -87,9 +88,14 @@ struct Token* lex_file (const char *filename)
 			{
 				if (stdv_size(indexstack) == 0)
 				{
-					// TODO: continue here
+					err_print(
+						ERROR_UNOPENED_BRACE,
+						lexd.source + i,
+						lexd.numline,
+						lexd.offset
+					);
 				}
-				stdv_put(tokens, save_token(&lexd));
+				stdv_put(tokens, save_token(&lexd, i));
 
 				lastype = '\0';
 				break;
