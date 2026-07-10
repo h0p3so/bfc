@@ -1,4 +1,5 @@
 #include "common/program-name.h"
+#include "common/bf-types.h"
 #include "libs/stdv.h"
 
 #include "lexer.h"
@@ -7,14 +8,6 @@
 #include <stdlib.h>
 
 #define LEXER_UNPAIRED  -1
-#define LEXER_TOKEN_ADD '+'
-#define LEXER_TOKEN_SUB '-'
-#define LEXER_TOKEN_OUT '.'
-#define LEXER_TOKEN_INP ','
-#define LEXER_TOKEN_LEF '['
-#define LEXER_TOKEN_RIG ']'
-#define LEXER_TOKEN_NXT '>'
-#define LEXER_TOKEN_PRV '<'
 
 enum Error
 {
@@ -72,18 +65,18 @@ struct LexToken* lex_file (const char *filename)
 
 		switch (lexd.source[i])
 		{
-			case LEXER_TOKEN_ADD:
-			case LEXER_TOKEN_SUB:
-			case LEXER_TOKEN_OUT:
-			case LEXER_TOKEN_INP:
-			case LEXER_TOKEN_NXT:
-			case LEXER_TOKEN_PRV:
+			case BF_TYPE_ADD:
+			case BF_TYPE_SUB:
+			case BF_TYPE_OUT:
+			case BF_TYPE_INP:
+			case BF_TYPE_NXT:
+			case BF_TYPE_PRV:
 			{
 				stdv_put(tokens, gen_token(&lexd, i));
 				lastype = *(stdv_back(tokens).context);
 				break;
 			}
-			case LEXER_TOKEN_LEF:
+			case BF_TYPE_LEF:
 			{
 				stdv_put(tokens, gen_token(&lexd, i));
 				stdv_back(tokens).aux = LEXER_UNPAIRED;
@@ -92,7 +85,7 @@ struct LexToken* lex_file (const char *filename)
 				lastype = '\0';
 				break;
 			}
-			case LEXER_TOKEN_RIG:
+			case BF_TYPE_RIG:
 			{
 				if (stdv_size(indexstack) == 0)
 				{
@@ -147,6 +140,7 @@ static uint32_t read_file (char **source, const char *filename)
 		exit(EXIT_FAILURE);
 	}
 
+	fclose(file);
 	return size;
 }
 
