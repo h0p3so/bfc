@@ -87,8 +87,7 @@ static inline void _gen_lef (FILE *file, const uint16_t auxL, const uint16_t aux
 		".L%d:\n"             \
 		"\tcmpb\t$0, (%r8)\n" \
 		"\tje\t.R%d\n";
-	const uint16_t id = auxL * auxR;
-	fprintf(file, fmt, id, id);
+	fprintf(file, fmt, auxL, auxR);
 }
 
 static inline void _gen_rig (FILE *file, const uint16_t auxL, const uint16_t auxR)
@@ -97,17 +96,19 @@ static inline void _gen_rig (FILE *file, const uint16_t auxL, const uint16_t aux
 		".R%d:\n"             \
 		"\tcmpb\t$0, (%r8)\n" \
 		"\tjne\t.L%d\n";
-	const uint16_t id = auxL * auxR;
-	fprintf(file, fmt, id, id);
+	fprintf(file, fmt, auxL, auxR);
 }
 
-/*L0:
-	cmpb	$0, (%r8)
-	je		R0
-	[code]
+/*L2
+R0*/
+
+/*L2:
+        cmpb    $0, (%r8)
+        je      R0
+        [code]
 R0:
-	cmpb	$0, (%r8)
-	jne		L0*/
+        cmpb    $0, (%r8)
+        jne     L2*/
 
 void gen_gen (const struct IRToken *ir, const char *outFilename, const uint16_t memsz)
 {
@@ -128,15 +129,15 @@ void gen_gen (const struct IRToken *ir, const char *outFilename, const uint16_t 
 		{
 			case INS_NOP: { continue; }
 
-			case INS_ADD: { _gen_add(file, t.lex_aux); break; }
-			case INS_SUB: { _gen_sub(file, t.lex_aux); break; }
-			case INS_NXT: { _gen_nxt(file, t.lex_aux); break; }
-			case INS_PRV: { _gen_prv(file, t.lex_aux); break; }
-			case INS_OUT: { _gen_out(file, t.lex_aux); break; }
-			case INT_INP: { _gen_inp(file, t.lex_aux); break; }
+			case INS_ADD: { _gen_add(file, t.aux); break; }
+			case INS_SUB: { _gen_sub(file, t.aux); break; }
+			case INS_NXT: { _gen_nxt(file, t.aux); break; }
+			case INS_PRV: { _gen_prv(file, t.aux); break; }
+			case INS_OUT: { _gen_out(file, t.aux); break; }
+			case INT_INP: { _gen_inp(file, t.aux); break; }
 
-			case INS_LEF: { _gen_lef(file, t.lex_aux, stdv_get(ir, t.lex_aux).lex_aux); break; }
-			case INS_RIG: { _gen_rig(file, t.lex_aux, stdv_get(ir, t.lex_aux).lex_aux); break; }
+			case INS_LEF: { _gen_lef(file, t.aux, stdv_get(ir, t.aux).aux); break; }
+			case INS_RIG: { _gen_rig(file, t.aux, stdv_get(ir, t.aux).aux); break; }
 
 			case INS_ZER:
 			case INS_SET:

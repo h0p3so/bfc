@@ -22,8 +22,7 @@ enum IRAction {
 
 struct IRToken {
 	enum IRAction action;
-	uint16_t lex_aux;
-	uint16_t optmzd;
+	uint16_t aux;
 };
 
 #endif

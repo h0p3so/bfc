@@ -11,8 +11,6 @@ struct IRToken* ir_gen (const struct LexToken *tokens, const bool optimize)
 	{
 		return simple_pass(ir, tokens);
 	}
-
-	// TODO: optimizations
 	return ir;
 }
 
@@ -23,7 +21,7 @@ static struct IRToken* simple_pass (struct IRToken *ir, const struct LexToken *t
 		struct LexToken token = stdv_get(tokens, i);
 		struct IRToken irt = {
 			.action = (enum IRAction) *token.context,
-			.lex_aux = token.aux
+			.aux = token.aux
 		};
 		stdv_put(ir, irt);
 	}
