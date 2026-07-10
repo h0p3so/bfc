@@ -1,6 +1,5 @@
 #include "lexer.h"
 #include "stdv.h"
-#include "err.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +13,12 @@
 #define LEXER_TOKEN_RIG ']'
 #define LEXER_TOKEN_NXT '>'
 #define LEXER_TOKEN_PRV '<'
+
+enum Error
+{
+	ERROR_UNOPENED_BRACE = 0,
+	ERROR_UNCLOSED_BRACE,
+};
 
 struct Lexd
 {
@@ -38,6 +43,8 @@ static inline struct Token gen_token (struct Lexd *lexd, const uint32_t off)
 static uint32_t read_file (char**, const char*);
 static void look_for_unclosed (const uint32_t*, const struct Token*);
 
+static void print_error (const enum Error, const char*, const uint16_t, const uint16_t, const bool);
+
 struct Token* lex_file (const char *filename)
 {
 	struct Lexd lexd = {
@@ -46,8 +53,8 @@ struct Token* lex_file (const char *filename)
 	};
 	lexd.length = read_file(&lexd.source, filename);
 
-	struct Token *tokens = stdv_create(STDV_STD_INIT_CAP, sizeof(struct Token));
-	uint32_t *indexstack = stdv_create(STDV_STD_INIT_CAP, sizeof(uint32_t));
+	struct Token *tokens = stdv_create(sizeof(struct Token), STDV_STD_INIT_CAP);
+	uint32_t *indexstack = stdv_create(sizeof(uint32_t)    , STDV_STD_INIT_CAP);
 
 	char lastype = '\0';
 
@@ -87,7 +94,7 @@ struct Token* lex_file (const char *filename)
 			{
 				if (stdv_size(indexstack) == 0)
 				{
-					err_print(ERROR_UNOPENED_BRACE, lexd.source + i, lexd.numline, lexd.offset, true);
+					print_error(ERROR_UNOPENED_BRACE, lexd.source + i, lexd.numline, lexd.offset, true);
 				}
 
 				struct Token token = gen_token(&lexd, i);
@@ -152,6 +159,30 @@ static void look_for_unclosed (const uint32_t *stack, const struct Token *tokens
 	for (uint32_t i = 0; i < on_error; i++)
 	{
 		struct Token t = stdv_get(tokens, stdv_get(stack, i));
-		err_print(ERROR_UNCLOSED_BRACE, t.context, t.numline, t.offset, ((i + 1) == on_error));
+		print_error(ERROR_UNCLOSED_BRACE, t.context, t.numline, t.offset, ((i + 1) == on_error));
+	}
+}
+
+static void print_error (const enum Error error, const char *context, const uint16_t numline, const uint16_t offset, const bool _exit)
+{
+		static const char *const errors[] =
+	{
+		"(unopened brace)",
+		"(unclosed brace)",
+	};
+
+	fprintf(stderr, "bfc:error: cannot continue due to %s condition\n", errors[error]);
+	fprintf(stderr, "%5d:%-5d: ", numline, offset);
+
+	const char type = *context;
+	uint32_t n = 0;
+
+	for (; context[n] == type; n++)
+		;;
+
+	fprintf(stderr, "\x1b[5m%.*s\x1b[25m\n\n", n, context);
+	if (_exit)
+	{
+		exit(EXIT_FAILURE);
 	}
 }
