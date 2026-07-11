@@ -1,0 +1,4 @@
+PERFORMANCE
+	* 2bb79e2:
+		mandelbrot: -S (no optimizations): ~1   second (0.950)
+		hanoi:      -S (no optimizations): ~1.1 second (1.80)	

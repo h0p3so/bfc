@@ -15,4 +15,4 @@ $(EXEC): $(OBJS)
 %.o: %.c
 	$(CC) $< -c -o $@ $(C_FLAGS)
 clean:
-	rm -rf $(OBJS) $(EXEC) a.out
+	rm -rf $(OBJS) $(EXEC) a.out *.s

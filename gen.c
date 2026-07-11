@@ -21,11 +21,12 @@ static inline void _gen_prelude (FILE *file, const uint16_t memsz)
 
 static inline void _gen_postlude (FILE *file)
 {
-	static const char *const fmt =
+	static const char *const _fmt =
 		"\tmovq\t$60, %rax\n"  \
 		"\txorq\t%rdi, %rdi\n" \
 		"\tsyscall\n";
-	fprintf(file, "%s", fmt);
+	fprintf(file, "%s", _fmt);
+
 }
 
 static inline void _gen_add (FILE *file, const uint16_t aux)
@@ -99,25 +100,13 @@ static inline void _gen_rig (FILE *file, const uint16_t auxL, const uint16_t aux
 	fprintf(file, fmt, auxL, auxR);
 }
 
-/*L2
-R0*/
-
-/*L2:
-        cmpb    $0, (%r8)
-        je      R0
-        [code]
-R0:
-        cmpb    $0, (%r8)
-        jne     L2*/
-
 void gen_gen (const struct IRToken *ir, const char *outFilename, const uint16_t memsz)
 {
-	const char *filename = (outFilename) ? outFilename : "out.s";
-	FILE *file = fopen(filename, "w");
+	FILE *file = fopen(outFilename, "w");
 
 	if (!file)
 	{
-		fprintf(stderr, "%s:gen: cannot open file (%s) to write\n", PROGRAM_NAME, filename);
+		fprintf(stderr, "%s:gen: cannot open file (%s) to write\n", PROGRAM_NAME, outFilename);
 		exit(EXIT_FAILURE);
 	}
 
@@ -139,8 +128,8 @@ void gen_gen (const struct IRToken *ir, const char *outFilename, const uint16_t 
 			case INS_LEF: { _gen_lef(file, t.aux, stdv_get(ir, t.aux).aux); break; }
 			case INS_RIG: { _gen_rig(file, t.aux, stdv_get(ir, t.aux).aux); break; }
 
-			case INS_ZER:
-			case INS_SET:
+			case INS_ZER: { break; }
+			case INS_SET: { break; }
 			default:
 			{
 				fprintf(stderr, "%s:gen: unreachable\n", PROGRAM_NAME);
