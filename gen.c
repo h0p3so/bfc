@@ -29,7 +29,7 @@ static inline void _gen_postlude (FILE *file)
 
 }
 
-static inline void _gen_add (FILE *file, const uint16_t aux)
+static inline void _gen_add (FILE *file, const int16_t aux)
 {
 	static const char *const fmt =
 		"\taddb\t$%d, (%r8)\n";
@@ -37,28 +37,28 @@ static inline void _gen_add (FILE *file, const uint16_t aux)
 }
 
 
-static inline void _gen_sub (FILE *file, const uint16_t aux)
+static inline void _gen_sub (FILE *file, const int16_t aux)
 {
 	static const char *const fmt =
 		"\tsubb\t$%d, (%r8)\n";
 	fprintf(file, fmt, aux);
 }
 
-static inline void _gen_nxt (FILE *file, const uint16_t aux)
+static inline void _gen_nxt (FILE *file, const int16_t aux)
 {
 	static const char *const fmt =
 		"\taddq\t$%d, %r8\n";
 	fprintf(file, fmt, aux);
 }
 
-static inline void _gen_prv (FILE *file, const uint16_t aux)
+static inline void _gen_prv (FILE *file, const int16_t aux)
 {
 	static const char *const fmt =
 		"\tsubq\t$%d, %r8\n";
 	fprintf(file, fmt, aux);
 }
 
-static inline void _gen_out (FILE *file, const uint16_t aux)
+static inline void _gen_out (FILE *file, const int16_t aux)
 {
 	static const char *const fmt =
 		"\tmovq\t$1, %rax\n"  \
@@ -66,11 +66,11 @@ static inline void _gen_out (FILE *file, const uint16_t aux)
 		"\tmovq\t%r8, %rsi\n" \
 		"\tmovq\t$1, %rdx\n"  \
 		"\tsyscall\n";
-	for (uint16_t i = 0; i < aux; i++)
+	for (int16_t i = 0; i < aux; i++)
 		fprintf(file, "%s", fmt);
 }
 
-static inline void _gen_inp (FILE *file, const uint16_t aux)
+static inline void _gen_inp (FILE *file, const int16_t aux)
 {
 	static const char *const fmt =
 		"\tmovq\t$0, %rax\n"  \
@@ -78,11 +78,11 @@ static inline void _gen_inp (FILE *file, const uint16_t aux)
 		"\tmovq\t%r8, %rsi\n" \
 		"\tmovq\t$1, %rdx\n"  \
 		"\tsyscall\n";
-	for (uint16_t i = 0; i < aux; i++)
+	for (int16_t i = 0; i < aux; i++)
 		fprintf(file, "%s", fmt);
 }
 
-static inline void _gen_lef (FILE *file, const uint16_t auxL, const uint16_t auxR)
+static inline void _gen_lef (FILE *file, const int16_t auxL, const int16_t auxR)
 {
 	static const char *const fmt =
 		".L%d:\n"             \
@@ -91,7 +91,7 @@ static inline void _gen_lef (FILE *file, const uint16_t auxL, const uint16_t aux
 	fprintf(file, fmt, auxL, auxR);
 }
 
-static inline void _gen_rig (FILE *file, const uint16_t auxL, const uint16_t auxR)
+static inline void _gen_rig (FILE *file, const int16_t auxL, const int16_t auxR)
 {
 	static const char *const fmt =
 		".R%d:\n"             \
@@ -99,6 +99,13 @@ static inline void _gen_rig (FILE *file, const uint16_t auxL, const uint16_t aux
 		"\tjne\t.L%d\n";
 	fprintf(file, fmt, auxL, auxR);
 }
+
+static inline void _gen_mov (FILE *file, const int16_t aux)
+{
+	static const char *const fmt = "\tmovb\t$%d, (%r8)\n";
+	fprintf(file, fmt, aux);
+}
+
 
 void gen_gen (const struct IRToken *ir, const char *outFilename, const uint16_t memsz)
 {
@@ -128,8 +135,8 @@ void gen_gen (const struct IRToken *ir, const char *outFilename, const uint16_t 
 			case INS_LEF: { _gen_lef(file, t.aux, stdv_get(ir, t.aux).aux); break; }
 			case INS_RIG: { _gen_rig(file, t.aux, stdv_get(ir, t.aux).aux); break; }
 
-			case INS_ZER: { break; }
-			case INS_SET: { break; }
+			case INS_ZER: { _gen_mov(file, 0); break; }
+			case INS_MOV: { _gen_mov(file, t.aux); break; }
 			default:
 			{
 				fprintf(stderr, "%s:gen: unreachable\n", PROGRAM_NAME);
