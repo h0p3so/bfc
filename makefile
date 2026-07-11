@@ -2,6 +2,7 @@ CC = gcc
 OBJS = bfc.o lexer.o ir.o gen.o
 C_FLAGS = -Wall -Wextra -Wpedantic
 ASM_FLAGS = -nolibc -nostdlib -nostartfiles
+IR_FLAGS =
 EXEC = bfc
 
 .PHONY: clean all
@@ -13,6 +14,6 @@ asm:
 $(EXEC): $(OBJS)
 	$(CC) $(OBJS) -o $(EXEC)
 %.o: %.c
-	$(CC) $< -c -o $@ $(C_FLAGS)
+	$(CC) $< -c -o $@ $(C_FLAGS) $(IR_FLAGS)
 clean:
 	rm -rf $(OBJS) $(EXEC) a.out *.s

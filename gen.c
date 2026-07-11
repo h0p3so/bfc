@@ -85,19 +85,18 @@ static inline void _gen_inp (FILE *file, const int16_t aux)
 static inline void _gen_lef (FILE *file, const int16_t auxL, const int16_t auxR)
 {
 	static const char *const fmt =
-		".L%d:\n"             \
+		".B%d:\n"             \
 		"\tcmpb\t$0, (%r8)\n" \
-		"\tjbe\t.R%d\n";
+		"\tjbe\t.E%d\n";
 	fprintf(file, fmt, auxL, auxR);
 }
 
 static inline void _gen_rig (FILE *file, const int16_t auxL, const int16_t auxR)
 {
 	static const char *const fmt =
-		".R%d:\n"             \
-		"\tcmpb\t$0, (%r8)\n" \
-		"\tja\t.L%d\n";
-	fprintf(file, fmt, auxL, auxR);
+		"\tjmp\t.B%d\n" \
+		".E%d:\n";
+	fprintf(file, fmt, auxR, auxL);
 }
 
 static inline void _gen_mov (FILE *file, const int16_t aux)
@@ -108,26 +107,28 @@ static inline void _gen_mov (FILE *file, const int16_t aux)
 
 static inline void _gen_mul (FILE *file)
 {
-	static const char *const fmt = "\tmovb\t(%r8), %r9b\n";
+	static const char *const fmt =
+		"\txorq\t%r9, %r9\n"   \
+		"\tmovb\t(%r8), %r9b\n";
 	fprintf(file, "%s", fmt);
 }
 
 static inline void _gen_mul_add (FILE *file, const int16_t aux)
 {
-	static const char *const fmt =
+	static const char *const fmt1 =
 		"\tmovb\t$%d, %%al\n" \
 		"\timulb\t%r9b\n"    \
 		"\taddb\t%%al, (%r8)\n";
-	fprintf(file, fmt, aux);
+	fprintf(file, fmt1, aux);
 }
 
 static inline void _gen_mul_sub (FILE *file, const int16_t aux)
 {
-	static const char *const fmt =
+	static const char *const fmt1 =
 		"\tmovb\t$%d, %%al\n" \
 		"\timulb\t%r9b\n"    \
 		"\tsubb\t%%al, (%r8)\n";
-	fprintf(file, fmt, aux);
+	fprintf(file, fmt1, aux);
 }
 
 void gen_gen (const struct IRToken *ir, const char *outFilename, const uint16_t memsz)
