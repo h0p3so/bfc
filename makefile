@@ -9,7 +9,7 @@ EXEC = bfc
 all: $(EXEC)
 
 asm:
-	$(CC) *.s $(ASM_FLAGS)
+	$(CC) *.s $(ASM_FLAGS) -g
 $(EXEC): $(OBJS)
 	$(CC) $(OBJS) -o $(EXEC)
 %.o: %.c
