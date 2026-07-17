@@ -141,7 +141,7 @@ static void debug_ir (const struct IRToken *ir, const char *filename)
 	{
 		const struct IRToken irt = stdv_get(ir, i);
 		printf(
-			"[%s: %5d]\n",
+			"[%-8s: %5d]\n",
 			ir_action_as_str(irt.action),
 			irt.aux
 		);
