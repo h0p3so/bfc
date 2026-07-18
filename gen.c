@@ -15,8 +15,9 @@ static inline void _gen_prelude (FILE *file, const uint16_t memsz)
 		".section .text\n"                   \
 		".globl _start\n"                    \
 		"_start:\n"                          \
-		"\tleaq\t.memory(%rip), %r8\n";
-	fprintf(file, fmt, memsz);
+		"\tleaq\t.memory(%rip), %r8\n"       \
+		"\taddq\t$%d, %r8\n";
+	fprintf(file, fmt, memsz * 2, memsz);
 }
 
 static inline void _gen_postlude (FILE *file)
@@ -35,7 +36,6 @@ static inline void _gen_add (FILE *file, const int16_t aux)
 		"\taddb\t$%d, (%r8)\n";
 	fprintf(file, fmt, aux);
 }
-
 
 static inline void _gen_sub (FILE *file, const int16_t aux)
 {
@@ -115,20 +115,40 @@ static inline void _gen_mul (FILE *file)
 
 static inline void _gen_mul_add (FILE *file, const int16_t aux)
 {
-	static const char *const fmt1 =
+	static const char *const raw =
 		"\tmovb\t$%d, %%al\n" \
-		"\timulb\t%r9b\n"    \
+		"\timulb\t%r9b\n"     \
 		"\taddb\t%%al, (%r8)\n";
-	fprintf(file, fmt1, aux);
+
+	static const char *const reg =
+		"\tmovb\t%r9b, %%al\n"  \
+		"\taddb\t%%al, (%r8)\n";
+
+	if (aux == 1)
+	{
+		fprintf(file, reg, aux);
+		return;
+	}
+	fprintf(file, raw, aux);
 }
 
 static inline void _gen_mul_sub (FILE *file, const int16_t aux)
 {
-	static const char *const fmt1 =
+	static const char *const raw =
 		"\tmovb\t$%d, %%al\n" \
 		"\timulb\t%r9b\n"    \
 		"\tsubb\t%%al, (%r8)\n";
-	fprintf(file, fmt1, aux);
+
+	static const char *const reg =
+		"\tmovb\t%r9b, %%al\n"  \
+		"\tsubb\t%%al, (%r8)\n";
+
+	if (aux == 1)
+	{
+		fprintf(file, reg, aux);
+		return;
+	}
+	fprintf(file, raw, aux);
 }
 
 void gen_gen (const struct IRToken *ir, const char *outFilename, const uint16_t memsz)
