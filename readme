@@ -1,2 +1,12 @@
+
+TODO
+	[x] read and check file
+	[x] -f, -o and -m flags
+	[x] lexer and error handling (usage)
+	[x] debug flags (-d and -D)
+	[x] produce x86_64 source code (-S)
+	[x] optimizations (-O)
+	[ ] generate elf file (nas)
+
 AUTHOR
 	Juan Diego PM (h0p3so)
