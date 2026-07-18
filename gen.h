@@ -3,6 +3,6 @@
 
 #include "common/ir-types.h"
 
-void gen_gen (const struct IRToken*, const char*, const uint16_t);
+void gen_gen (const struct IRToken*, const char*, const uint32_t);
 
 #endif
