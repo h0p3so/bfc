@@ -64,17 +64,6 @@ static struct IRToken* simple_pass (struct IRToken *ir, const struct LexToken *t
 	return ir;
 }
 
-/* 
- * Optimization 1: Constant cancellation
- * Merge neighboring operations of the same kind
- *
- * INS_ADD(4), INS_SUB(3) -> INS_MOV(1)
- *
- * Optimization 2: Setting zeroes
- * [+] or [-] becomes INS_ZER
- *
- *
- */
 static struct IRToken* optimize (struct IRToken *ir)
 {
 	struct IRToken none = {
@@ -206,18 +195,33 @@ static void apply_further_optimization (struct IRToken *ir, const uint32_t from,
 	int32_t startingCell = 0;
 	bool cursorHasMoved = false;
 
+#ifdef IR_DEBUG
+	printf("Optimization ---------------------------------------------------------------------------------\n");
+	printf("L%d\n", stdv_get(ir, from).aux);
+	for (uint32_t i = from; i < to + 1; i++)
+#else
 	for (uint32_t i = from; i < to; i++)
+#endif
 	{
 		const struct IRToken token = stdv_get(ir, i);
 		if (token.action == INS_NXT) { startingCell += token.aux; cursorHasMoved = true; }
 		if (token.action == INS_PRV) { startingCell -= token.aux; cursorHasMoved = true; }
+
+#ifdef IR_DEBUG
+		printf("(%-8s %d) ", ir_action_as_str(token.action), token.aux);
+#endif
 	}
 
 	/* Optimizations where the cursor does not move are implemented in
 	 * `pattern_recognition` function
 	 */
 	if (cursorHasMoved == false || startingCell != 0)
-	{ return; }
+	{
+#ifdef IR_DEBUG
+		puts("\n\n\n");
+#endif
+		return;
+	}
 
 	for (uint32_t i = from; i < to + 1; i++)
 	{
@@ -241,12 +245,14 @@ static void apply_further_optimization (struct IRToken *ir, const uint32_t from,
 			}
 		}
 	}
+
+#ifdef IR_DEBUG
+	puts("\nreplaced by:");
+	for (uint32_t i = from; i < to + 1; i++)
+	{
+		const struct IRToken token = stdv_get(ir, i);
+		printf("(%-8s %d) ", ir_action_as_str(token.action), token.aux);
+	}
+	puts("\n\n\n");
+#endif
 }
-
-/*[<->-<<<<<<+>>>>>>] = MUL PRV
-
-MUL: take the value of the current pointer and store it in r8
-LEF
-MUL_SUB: mul the current cell by r8 and subtract to current ptr
-RIG
-*/
