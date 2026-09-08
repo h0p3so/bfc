@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static inline void _gen_prelude (FILE *file, const uint16_t memsz)
+static inline void _gen_prelude (FILE *file, const uint32_t memsz)
 {
 	static const char *const fmt =
 		".section .rodata\n"                 \
@@ -17,7 +17,7 @@ static inline void _gen_prelude (FILE *file, const uint16_t memsz)
 		"_start:\n"                          \
 		"\tleaq\t.memory(%rip), %r8\n"       \
 		"\taddq\t$%d, %r8\n";
-	fprintf(file, fmt, memsz * 2, memsz);
+	fprintf(file, fmt, memsz, memsz / 2);
 }
 
 static inline void _gen_postlude (FILE *file)
@@ -151,7 +151,7 @@ static inline void _gen_mul_sub (FILE *file, const int16_t aux)
 	fprintf(file, raw, aux);
 }
 
-void gen_gen (const struct IRToken *ir, const char *outFilename, const uint16_t memsz)
+void gen_gen (const struct IRToken *ir, const char *outFilename, const uint32_t memsz)
 {
 	FILE *file = fopen(outFilename, "w");
 
