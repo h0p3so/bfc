@@ -1,12 +1,20 @@
 
-TODO
-	[x] read and check file
-	[x] -f, -o and -m flags
-	[x] lexer and error handling (usage)
-	[x] debug flags (-d and -D)
-	[x] produce x86_64 source code (-S)
-	[x] optimizations (-O)
-	[ ] generate elf file (nas)
+	bfc: brainfuck compiler for x86_64
 
-AUTHOR
-	Juan Diego PM (h0p3so)
+about:
+	bfc is a simple compiler for brainfuck for x86_64 programming language since
+	my bfi (brainfuck interpreter) was not fast enough
+
+	it is a compiler in the sense of bfc produces the assembly code for x86_64
+	arch in gnu style syntax.
+
+	bfc does not produce object code (elf), that's another project i want to make,
+	nas: naive assembler, so whenever nas is ready, bfc will be a full compiler as
+	normally compilers are known
+
+notes:
+	- since bfc is not complete yet (missing the assembler), you
+	need to specify -S flag (it produces the assembly source code),
+	once nas is ready -S flag will be optional
+	- in the current state of the project there are not brainfuck programs
+	in the code base, yet you can download a few by running make pull-asm (see makefile)
